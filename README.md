@@ -1,114 +1,135 @@
-#🎨 Color Composition Optimizer
-Predictive Modeling for Dye Manufacturing Using XGBoost & Scikit-learn
+🎨 Color Composition Optimizer (AI-Powered)
+Optimize dye formulations to match target LAB color specifications using machine learning.
 
-#📌 Project Overview
-In industrial dye manufacturing, precisely achieving target LAB color values is crucial to product consistency. This project develops a machine learning model to predict optimal dye compositions that achieve desired LAB color specifications. By learning from historical formulations, the model provides accurate and scalable recommendations to optimize dye mixing processes.
+📌 Project Overview
+In precision dye manufacturing, matching specific color specifications in the CIELAB (L*, a*, b*) space is essential. This project leverages machine learning to develop an intelligent optimizer that predicts which colors and how much of each to add in iterative strokes to minimize color difference (ΔE) and stay within product tolerances.
 
-🚀 Key Features
-🎯 LAB Color Space Prediction: Predicts the resulting LAB values from given pigment compositions.
+🧪 Dataset Description
+The dataset consists of 11 Excel sheets (S-52 to S-62), each representing a batch scenario in a manufacturing environment.
 
-🧠 XGBoost Regression: Utilizes a robust ensemble model for high-accuracy multi-output regression.
+Each sheet includes:
+9 base colors with initial quantities
 
-⚙️ Scikit-learn Pipeline: Streamlined data preprocessing, feature engineering, and modeling.
+A target color (master L*, a*, b*)
 
-📊 Interactive Analysis: Exploratory Data Analysis (EDA) to visualize trends and correlations.
+Initial batch LAB values and calculated differences (ΔL, Δa, Δb, ΔE)
 
-📁 Notebook-driven Workflow: End-to-end implementation in a Jupyter Notebook for reproducibility.
+Stroke-wise adjustments: additional color(s) added, resulting LAB values, and ΔE values
 
-🛠️ Tech Stack
-Tool	Usage
-Python	Core programming language
-Jupyter Notebook	Prototyping and visualization
-XGBoost	Gradient Boosting Regressor
-Scikit-learn	Data preprocessing & pipeline
-Pandas & NumPy	Data manipulation
-Matplotlib & Seaborn	Data visualization
+A final stroke where ΔE is minimized
 
-📂 Dataset Description
-The dataset includes:
+Color specification bounds:
 
-Input Features: Pigment composition ratios (e.g., Red-1, Blue-2, Yellow-3, etc.)
+L: 21.5 to 22.5
 
-Target Labels: Corresponding LAB values (L*, a*, b*) for each pigment mix
+a: –0.6 to –0.2
 
-Other Columns: Batch ID, process parameters, or other metadata (if available)
+b: –2.8 to –3.3
 
-Note: Due to NDA/data privacy, the dataset is not publicly included.
+🎯 Objective
+Build an optimization model that, given the base color quantities and the initial LAB values, recommends the optimal set of color additions (stroke-wise) to bring the batch within the required color spec tolerance and minimize ΔE.
 
-🔍 Approach
-Data Preprocessing
+🧠 Approach
+1. Data Preprocessing
+Read all 11 sheets and consolidate them into a unified DataFrame.
 
-Missing value handling
+Extract features:
 
-Feature scaling and normalization
+Base color quantities
 
-Correlation heatmaps
+Initial LAB values, Target LAB
 
-Model Building
+Per-stroke changes in LAB and color additions
 
-XGBoost Regressor with hyperparameter tuning
+Normalize and scale color quantities
 
-Multi-output regression using MultiOutputRegressor
+2. Feature Engineering
+Compute:
 
-Cross-validation and error analysis
+Δ(L, a, b) = Target – Initial
 
-Evaluation Metrics
+Per-stroke LAB delta and ΔE
 
-Mean Absolute Error (MAE)
+Construct action vectors representing color added in each stroke
 
-R² Score
+3. Modeling Approaches
+✅ Regression-based optimizer (XGBoost + MultiOutputRegressor)
+Predict Δ(L, a, b) from current LAB + color additions
 
-Visual comparison between predicted and actual LAB values
+🔁 Greedy iterative optimizer
+For each stroke, simulate all color additions and choose the one with the lowest predicted ΔE
 
-Optimization
+Optional: Extend to reinforcement learning if the domain complexity increases.
 
-Feature selection (optional)
+🔄 Optimization Pipeline
+Start with initial LAB & target LAB
 
-Grid search for tuning max_depth, n_estimators, learning_rate
+For each stroke (max 4):
 
-📈 Results
-Achieved low MAE (< 2.0) across L*, a*, b* channels
+Predict resulting LAB after adding each color
 
-Accurate generalization across unseen dye compositions
+Calculate ΔE
 
-Visualizations confirm tight prediction bands and minimal deviation
+Pick the best color to reduce ΔE
 
-🧪 Sample Code Snippet
+Stop if ΔE is under threshold and LAB is within spec
+
+Sample Code Snippet
 python
 Copy
 Edit
-from xgboost import XGBRegressor
-from sklearn.multioutput import MultiOutputRegressor
+for _ in range(max_strokes):
+    best_color, best_lab, best_de = find_best_color(current_lab, target_lab)
+    if best_de < 1.0 and within_spec(best_lab):
+        break
+    strokes.append(best_color)
+    current_lab = best_lab
+📈 Expected Output
+A structured output per batch (sheet):
 
-xgb = XGBRegressor(n_estimators=200, max_depth=6, learning_rate=0.1)
-model = MultiOutputRegressor(xgb)
-model.fit(X_train, y_train)
+json
+Copy
+Edit
+{
+  "target_lab": [22.0, -0.4, -3.1],
+  "initial_lab": [20.5, -0.8, -2.4],
+  "predicted_strokes": [
+    {"color": "Color 5", "ΔE": 6.1},
+    {"color": "Color 3", "ΔE": 3.0},
+    {"color": "Color 1", "ΔE": 1.2}
+  ],
+  "final_lab": [22.1, -0.3, -3.2],
+  "final_ΔE": 0.9
+}
+📦 Tech Stack
+Tool/Library	Purpose
+Python	Core implementation
+Pandas, NumPy	Data manipulation and I/O
+XGBoost	Gradient Boosting Regressor
+Scikit-learn	Multi-output regression, modeling
+Matplotlib/Seaborn	Visualizations
+openpyxl	Excel parsing
 
-preds = model.predict(X_test)
-✅ Use Cases
-💡 Assist dye engineers in matching precise colors
+📌 Challenges Addressed
+Matching LAB values across multiple real-world iterations
 
-📉 Reduce trial-and-error time and dye waste
+Predicting additive behavior of colors with nonlinear mixing effects
 
-🧪 Automate color prediction for custom orders
+Working with real dye compositions and tight color tolerance windows
 
-📌 Future Enhancements
-Deploy model as a REST API using Flask or FastAPI
+Automating a manual, experience-driven formulation process
 
-Build a front-end UI for interactive LAB input and prediction
+🔮 Future Enhancements
+Deploy model as an API with a UI where users input initial LAB → get color addition recommendation
 
-Integrate genetic algorithms for inverse color matching
+Integrate inverse optimization (what mix achieves a target LAB?)
 
-Explore neural networks for nonlinear blending models
+Incorporate physical constraints (e.g., color compatibility, cost limits)
 
-📚 References
-XGBoost Documentation
+Use GANs or RL for dynamic stroke planning
 
-CIELAB Color Space
+👨‍🔬 Author
+[Saurav Pampana]
+AI & ML Enthusiast | Color Science Optimizer
+LinkedIn • GitHub
 
-Scikit-learn MultiOutputRegressor
-
-👨‍💻 Author
-[Your Name]
- ML & Full-Stack Enthusiast
-LinkedIn | GitHub
