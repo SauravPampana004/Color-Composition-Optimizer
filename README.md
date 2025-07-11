@@ -1,7 +1,7 @@
-🎨 Color Composition Optimizer
+#🎨 Color Composition Optimizer
 Predictive Modeling for Dye Manufacturing Using XGBoost & Scikit-learn
 
-📌 Project Overview
+#📌 Project Overview
 In industrial dye manufacturing, precisely achieving target LAB color values is crucial to product consistency. This project develops a machine learning model to predict optimal dye compositions that achieve desired LAB color specifications. By learning from historical formulations, the model provides accurate and scalable recommendations to optimize dye mixing processes.
 
 🚀 Key Features
